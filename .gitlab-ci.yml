@@ -1,44 +1,102 @@
 stages:
+  - lint
   - rootfs
   - docker
   - test
+  - publish
 
-roofs:
+lint:base:
+  stage: lint
+  image: hadolint/hadolint:latest
+  script: hadolint Dockerfile.base
+
+lint:base-devel:
+  stage: lint
+  image: hadolint/hadolint:latest
+  script: hadolint Dockerfile.base-devel
+
+rootfs:base:
   stage: rootfs
   image: archlinux:latest
+  needs:
+    - job: "lint:base"
   script:
     - pacman -Syu --noconfirm make devtools fakechroot fakeroot
-    - make compress-rootfs
+    - make base.tar.xz
   artifacts:
     paths:
-      - archlinux.tar.xz
+      - base.tar.xz
     expire_in: 10m
 
-docker:
+rootfs:base-devel:
+  stage: rootfs
+  image: archlinux:latest
+  needs:
+    - job: "lint:base-devel"
+  script:
+    - pacman -Syu --noconfirm make devtools fakechroot fakeroot
+    - make base-devel.tar.xz
+  artifacts:
+    paths:
+      - base-devel.tar.xz
+    expire_in: 10m
+
+test:download:
+  stage: docker
+  image:
+    name: curlimages/curl
+  needs:
+    - job: "rootfs:base"
+  script:
+    - curl -Ls -o /dev/null -w %{url_effective} "https://gitlab.archlinux.org/archlinux/archlinux-docker/-/jobs/artifacts/add-base-devel-tags/raw/base.tar.xz?job=rootfs:base"
+
+docker:base:
   stage: docker
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
-  script:
-    - test -f archlinux.tar.xz
-    # kaniko can't process .tar.xz archives
-    # https://github.com/GoogleContainerTools/kaniko/issues/1107
-    - unxz archlinux.tar.xz
-    - test -f archlinux.tar
-    - sed -i 's/archlinux\.tar\.xz/archlinux\.tar/g' Dockerfile
-    - echo "Building ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}"
+  needs:
+    - job: "rootfs:base"
+  before_script:
+    - echo "BUILD_DATE=$(date +%Y%m%d)" > build.env
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - unxz base.tar.xz
+  script:
     - /kaniko/executor
       --whitelist-var-run="false"
       --context $CI_PROJECT_DIR
-      --dockerfile $CI_PROJECT_DIR/Dockerfile
-      --destination ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}
+      --dockerfile $CI_PROJECT_DIR/Dockerfile.base
+      --destination ${CI_REGISTRY_IMAGE}:base-${CI_COMMIT_REF_SLUG}
+  artifacts:
+    reports:
+      dotenv: build.env
 
-test:
-  stage: test
-  image: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}
+docker:base-devel:
+  stage: docker
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
   needs:
-    - job: docker
+    - job: "rootfs:base-devel"
+  before_script:
+    - echo "BUILD_DATE=$(date +%Y%m%d)" > build.env
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - unxz base-devel.tar.xz
+  script:
+    - /kaniko/executor
+      --whitelist-var-run="false"
+      --context $CI_PROJECT_DIR
+      --dockerfile $CI_PROJECT_DIR/Dockerfile.base-devel
+      --destination ${CI_REGISTRY_IMAGE}:base-devel-${CI_COMMIT_REF_SLUG}
+  artifacts:
+    reports:
+      dotenv: build.env
+
+test:base:
+  stage: test
+  image: ${CI_REGISTRY_IMAGE}:base-${CI_COMMIT_REF_SLUG}
+  needs:
+    - job: "docker:base"
       artifacts: false
   script:
     - pacman -Sy
@@ -48,3 +106,70 @@ test:
     - id -u http
     - locale | grep -q UTF-8
 
+test:base-devel:
+  stage: test
+  image: ${CI_REGISTRY_IMAGE}:base-devel-${CI_COMMIT_REF_SLUG}
+  needs:
+    - job: "docker:base-devel"
+      artifacts: false
+  script:
+    - pacman -Sy
+    - pacman -Qqk
+    - pacman -Syu --noconfirm docker grep
+    - docker -v
+    - id -u http
+    - locale | grep -q UTF-8
+    - gcc -v
+    - g++ -v
+    - make -v
+
+# Publish base to the Arch Linux group namespace: https://hub.docker.com/r/archlinux/archlinux:base
+publish:org:base:
+  stage: publish
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [""]
+  needs:
+    - job: "test:base"
+      artifacts: true
+  tags:
+    - secure
+  variables:
+    GIT_STRATEGY: none
+  before_script:
+    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - crane auth login -u $SOME_TECHNICAL_DOCKER_HUB_USER -p $SOME_TECHNICAL_DOCKER_HUB_PASSWORD archlinux/archlinux
+  script:
+    - crane cp ${CI_REGISTRY_IMAGE}:base-${CI_COMMIT_REF_SLUG} archlinux/archlinux:base
+    - crane tag archlinux/archlinux:base latest
+    - crane tag archlinux/archlinux:base base-$BUILD_DATE
+  only:
+    variables:
+      - $SCHEDULED_PUBLISH == "TRUE"
+
+# Publish base-devel to the Arch Linux group namespace: https://hub.docker.com/r/archlinux/archlinux:base-devel
+publish:org:base-devel:
+  stage: publish
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [""]
+  needs:
+    - job: "test:base-devel"
+      artifacts: true
+  tags:
+    - secure
+  variables:
+    GIT_STRATEGY: none
+  before_script:
+    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - crane auth login -u $SOME_TECHNICAL_DOCKER_HUB_USER -p $SOME_TECHNICAL_DOCKER_HUB_PASSWORD archlinux/archlinux
+  script:
+    - crane cp ${CI_REGISTRY_IMAGE}:base-devel-${CI_COMMIT_REF_SLUG} archlinux/archlinux:base-devel
+    - crane tag archlinux/archlinux:base-devel base-devel-$BUILD_DATE
+  only:
+    variables:
+      - $SCHEDULED_PUBLISH == "TRUE"
+
+# Publish to the official Docker namespace: https://hub.docker.com/_/archlinux
+# publish:official:
+# TODO No idea right now how we're going to automatically do the official Docker Hub pull request
