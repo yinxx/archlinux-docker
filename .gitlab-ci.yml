@@ -267,7 +267,6 @@ publish:official:
     - BUILD_VERSION=v20201028.0.7526
     - BUILD_COMMIT=a4bcb0297b8bb1dd440c4af0622f16cf1ea659cb
   script:
-    - cat build.env
     - 'git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/archlinux/official-images.git"'
     - cd official-images
     - git fetch https://github.com/docker-library/official-images.git
