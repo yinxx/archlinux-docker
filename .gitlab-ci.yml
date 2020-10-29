@@ -267,11 +267,12 @@ publish:official:
     - BUILD_VERSION=v20201028.0.7526
     - BUILD_COMMIT=a4bcb0297b8bb1dd440c4af0622f16cf1ea659cb
   script:
-    - gh repo clone archlinux/official-images
+    - 'git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/archlinux/official-images.git"'
     - cd official-images
     - git fetch https://github.com/docker-library/official-images.git
     - git reset --hard FETCH_HEAD
-    - git checkout -b "release/${BUILD_VERSION}"
+    - head="release/${BUILD_VERSION}"
+    - git checkout -b "$head"
     - 'tags_line="$(grep -nr ^Tags: library/archlinux | head -1 | cut -d\: -f1)"'
     - 'printf "$(head -n $((tags_line-1)) library/archlinux)\n\nTags: latest, ${BUILD_VERSION}\nGitCommit: ${BUILD_COMMIT}\nGitFetch: refs/tags/${BUILD_VERSION}\nFile: Dockerfile.base" > library/archlinux'
     - git diff
@@ -280,9 +281,11 @@ publish:official:
         -m "archlinux: add ${BUILD_VERSION}"
         -m "This is an automated release [1]."
         -m "[1] ${CI_MERGE_REQUEST_PROJECT_URL}/-/blob/master/.gitlab-ci.yml"'
+    - git push -u origin "$head"
     - gh pr create
         --repo hashworks/official-images
         --reviewer SantiagoTores
         --reviewer hashworks
         --fill
         --base master
+        --head "$head"
