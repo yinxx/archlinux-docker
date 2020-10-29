@@ -257,14 +257,12 @@ publish:official:
     #  - schedules
     #variables:
     #  - $SCHEDULED_PUBLISH == "TRUE"
-  variables:
-    GIT_STRATEGY: none
   before_script:
     - test -n "$GITHUB_TOKEN"
-    - pacman -Syu --noconfirm github-cli git
+    - pacman -Syu --noconfirm github-cli git gettext
     - git config --global user.email "gitlabci@archlinux.org"
     - git config --global user.name "Arch Linux Technical User"
-    - BUILD_VERSION=v20201028.0.7526
+    - BUILD_VERSION=20201028.0.7526
     - BUILD_COMMIT=a4bcb0297b8bb1dd440c4af0622f16cf1ea659cb
   script:
     - 'git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/archlinux/official-images.git"'
@@ -273,8 +271,7 @@ publish:official:
     - git reset --hard FETCH_HEAD
     - head="release/${BUILD_VERSION}"
     - git checkout -b "$head"
-    - 'tags_line="$(grep -nr ^Tags: library/archlinux | head -1 | cut -d\: -f1)"'
-    - 'printf "$(head -n $((tags_line-1)) library/archlinux)\n\nTags: latest, ${BUILD_VERSION}\nGitCommit: ${BUILD_COMMIT}\nGitFetch: refs/tags/${BUILD_VERSION}\nFile: Dockerfile.base" > library/archlinux'
+    - envsubst < ../docker-library.template > library/archlinux
     - git diff
     - git add library/archlinux
     - 'git commit
