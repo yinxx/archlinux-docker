@@ -276,11 +276,10 @@ publish:official:
     - 'printf "$(head -n $((tags_line-1)) library/archlinux)\n\nTags: latest, ${BUILD_VERSION}\nGitCommit: ${BUILD_COMMIT}\nGitFetch: refs/tags/${BUILD_VERSION}\nFile: Dockerfile.base" > library/archlinux'
     - git diff
     - git add library/archlinux
-    - >
-      git commit
+    - 'git commit
         -m "archlinux: add ${BUILD_VERSION}"
         -m "This is an automated release [1]."
-        -m "[1] ${CI_MERGE_REQUEST_PROJECT_URL}/-/blob/master/.gitlab-ci.yml"
+        -m "[1] ${CI_MERGE_REQUEST_PROJECT_URL}/-/blob/master/.gitlab-ci.yml'
     - gh pr create
         --repo hashworks/official-images
         --reviewer SantiagoTores
