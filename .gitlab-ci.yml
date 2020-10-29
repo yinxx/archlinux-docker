@@ -279,7 +279,10 @@ publish:official:
     - 'sed -i "${tags_line}iTags: latest, ${BUILD_VERSION}\nGitCommit: ${BUILD_COMMIT}\nGitFetch: refs/tags/${BUILD_VERSION}\nFile: Dockerfile.base\n" library/archlinux'
     - git diff
     - git add library/archlinux
-    - 'git commit -m "archlinux: add ${BUILD_VERSION}" -m "This is an automated release."'
+    - 'git commit
+        -m "archlinux: add ${BUILD_VERSION}"
+        -m "This is an automated release [1]."'
+        -m "[1] https://gitlab.archlinux.org/archlinux/archlinux-docker/-/blob/master/.gitlab-ci.yml"
     - git push -u origin "$head"
     - gh pr create
         --repo hashworks/official-images
