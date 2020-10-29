@@ -274,7 +274,7 @@ publish:official:
     - git checkout -b "release/${BUILD_VERSION}"
     - |
       tags_line="$(grep -nr ^Tags: library/archlinux | head -1 | cut -d\: -f1)"
-      echo "$(head -n $((tags_line-1)) library/archlinux)\n\nTags: latest, ${BUILD_VERSION}\nGitCommit: ${BUILD_COMMIT}\nGitFetch: refs/tags/${BUILD_VERSION}\nFile: Dockerfile.base" > library/archlinux
+      printf "$(head -n $((tags_line-1)) library/archlinux)\n\nTags: latest, ${BUILD_VERSION}\nGitCommit: ${BUILD_COMMIT}\nGitFetch: refs/tags/${BUILD_VERSION}\nFile: Dockerfile.base" > library/archlinux
     - git diff
     - git add library/archlinux
     - |
