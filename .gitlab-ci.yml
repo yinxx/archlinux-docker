@@ -272,9 +272,9 @@ publish:official:
     - git fetch https://github.com/docker-library/official-images.git
     - git reset --hard FETCH_HEAD
     - git checkout -b "release/${BUILD_VERSION}"
-    - 'sed -i "s/Tags: latest, /Tags: /" library/archlinux'
-    - 'tags_line="$(grep -nr ^Tags: library/archlinux | head -1 | cut -d\: -f1)"'
-    - 'sed -i "${tags_line}iTags: latest, ${BUILD_VERSION}\nGitCommit: ${BUILD_COMMIT}\nGitFetch: refs/tags/${BUILD_VERSION}\nFile: Dockerfile.base\n" library/archlinux'
+    - |
+      tags_line="$(grep -nr ^Tags: library/archlinux | head -1 | cut -d\: -f1)"
+      echo "$(head -n $((tags_line-1)) library/archlinux)\n\nTags: latest, ${BUILD_VERSION}\nGitCommit: ${BUILD_COMMIT}\nGitFetch: refs/tags/${BUILD_VERSION}\nFile: Dockerfile.base" > library/archlinux
     - git diff
     - git add library/archlinux
     - |
