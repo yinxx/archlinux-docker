@@ -263,7 +263,7 @@ publish:official:
     - test -n "$GITHUB_TOKEN"
     - pacman -Syu --noconfirm github-cli git
     - git config --global user.email "gitlabci@archlinux.org"
-    - git config --global user.name "Arch Linux"
+    - git config --global user.name "Arch Linux Technical User"
     - BUILD_VERSION=v20201028.0.7526
     - BUILD_COMMIT=a4bcb0297b8bb1dd440c4af0622f16cf1ea659cb
   script:
