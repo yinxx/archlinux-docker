@@ -282,7 +282,7 @@ publish:official:
     - 'git commit
         -m "archlinux: add ${BUILD_VERSION}"
         -m "This is an automated release [1]."'
-        -m "[1] https://gitlab.archlinux.org/archlinux/archlinux-docker/-/blob/master/.gitlab-ci.yml"
+        -m "[1] ${CI_MERGE_REQUEST_PROJECT_URL}/-/blob/master/.gitlab-ci.yml"
     - git push -u origin "$head"
     - gh pr create
         --repo hashworks/official-images
