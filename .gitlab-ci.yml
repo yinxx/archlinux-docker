@@ -274,13 +274,13 @@ publish:official:
     - git push
     - head="release/${BUILD_VERSION}"
     - git checkout -b "$head"
-    - sed -i 's/Tags: latest, /Tags: /' library/archlinux
-    - tags_line="$(grep -nr ^Tags: library/archlinux | head -1 | cut -d\: -f1)"
-    - sed -i "${tags_line}iTags: latest, ${BUILD_VERSION}\nGitCommit: ${BUILD_COMMIT}\nGitFetch: refs/tags/${BUILD_VERSION}\nFile: Dockerfile.base\n"
+    - 'sed -i "s/Tags: latest, /Tags: /" library/archlinux'
+    - 'tags_line="$(grep -nr ^Tags: library/archlinux | head -1 | cut -d\: -f1)"'
+    - 'sed -i "${tags_line}iTags: latest, ${BUILD_VERSION}\nGitCommit: ${BUILD_COMMIT}\nGitFetch: refs/tags/${BUILD_VERSION}\nFile: Dockerfile.base\n"'
         library/archlinux
     - git diff
     - git add library/archlinux
-    - git commit -m 'archlinux: add ${BUILD_VERSION}' -m 'This is an automated release.'
+    - 'git commit -m "archlinux: add ${BUILD_VERSION}" -m "This is an automated release."'
     - git push -u origin "$head"
     - gh pr create
         # --repo docker-library/official-images
