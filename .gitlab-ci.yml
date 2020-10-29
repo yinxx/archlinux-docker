@@ -267,7 +267,7 @@ publish:official:
     - BUILD_VERSION=v20201028.0.7526
     - BUILD_COMMIT=a4bcb0297b8bb1dd440c4af0622f16cf1ea659cb
   script:
-    - gh clone archlinux/official-images
+    - gh repo clone archlinux/official-images
     - cd official-images
     - git fetch https://github.com/docker-library/official-images.git
     - git reset --hard FETCH_HEAD
