@@ -253,7 +253,7 @@ publish:official:
   stage: publish
   only:
     refs:
-      - feature/automatedGitHubPRs # Debug
+      - feature/automatedGitHubPRs
     #  - schedules
     #variables:
     #  - $SCHEDULED_PUBLISH == "TRUE"
@@ -262,32 +262,29 @@ publish:official:
   before_script:
     - test -n "$GITHUB_TOKEN"
     - pacman -Syu --noconfirm github-cli git
-    - BUILD_VERSION=v20201028.0.7526 # Debug
-    - BUILD_COMMIT=a4bcb0297b8bb1dd440c4af0622f16cf1ea659cb  # Debug
+    - git config --global user.email "gitlabci@archlinux.org"
+    - git config --global user.name "Arch Linux"
+    - BUILD_VERSION=v20201028.0.7526
+    - BUILD_COMMIT=a4bcb0297b8bb1dd440c4af0622f16cf1ea659cb
   script:
-    - cat build.env # Debug
-    - git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/archlinux/official-images.git"
+    - cat build.env
+    - 'git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/archlinux/official-images.git"'
     - cd official-images
-    - git remote add upstream git@github.com:docker-library/official-images.git
-    - git fetch upstream
-    - git merge upstream/master
+    - git fetch https://github.com/docker-library/official-images.git
+    - git reset --hard FETCH_HEAD
     - git push
     - head="release/${BUILD_VERSION}"
     - git checkout -b "$head"
     - 'sed -i "s/Tags: latest, /Tags: /" library/archlinux'
     - 'tags_line="$(grep -nr ^Tags: library/archlinux | head -1 | cut -d\: -f1)"'
-    - 'sed -i "${tags_line}iTags: latest, ${BUILD_VERSION}\nGitCommit: ${BUILD_COMMIT}\nGitFetch: refs/tags/${BUILD_VERSION}\nFile: Dockerfile.base\n"'
-        library/archlinux
+    - 'sed -i "${tags_line}iTags: latest, ${BUILD_VERSION}\nGitCommit: ${BUILD_COMMIT}\nGitFetch: refs/tags/${BUILD_VERSION}\nFile: Dockerfile.base\n" library/archlinux'
     - git diff
     - git add library/archlinux
     - 'git commit -m "archlinux: add ${BUILD_VERSION}" -m "This is an automated release."'
     - git push -u origin "$head"
     - gh pr create
-        # --repo docker-library/official-images
-        --repo hashworks/official-images # Debug
+        --repo hashworks/official-images
         --reviewer SantiagoTores
-        #--reviewer shibumi
-        #--reviewer pierres
         --reviewer hashworks
         --fill
         --base master
