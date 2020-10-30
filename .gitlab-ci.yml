@@ -278,12 +278,12 @@ publish:official:
     - 'git commit
         -m "archlinux: Release ${BUILD_VERSION}"
         -m "This is an automated release [1]."
+        -m "Maintainers: $(grep '(@' docker-library.template | cut -d'(' -f2 | cut -d')' -f1 | xargs)"
+        -m ""
         -m "[1] ${CI_PROJECT_URL}/-/blob/master/.gitlab-ci.yml"'
     - git push -u origin "$head"
     - gh pr create
         --repo hashworks/official-images
-        --reviewer SantiagoTorres
-        --reviewer hashworks
         --fill
         --base master
         --head archlinux:"$head"
