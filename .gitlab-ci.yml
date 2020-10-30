@@ -278,8 +278,7 @@ publish:official:
     - 'git commit
         -m "archlinux: Release ${BUILD_VERSION}"
         -m "This is an automated release [1]."
-        -m "Maintainers: $(grep '(@' docker-library.template | cut -d'(' -f2 | cut -d')' -f1 | xargs)"
-        -m ""
+        -m "Maintainers: $(grep \(@ ../docker-library.template | cut -d\( -f2 | cut -d\) -f1 | xargs)"
         -m "[1] ${CI_PROJECT_URL}/-/blob/master/.gitlab-ci.yml"'
     - git push -u origin "$head"
     - gh pr create
