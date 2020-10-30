@@ -268,7 +268,7 @@ publish:official:
     - cd official-images
     - git fetch https://github.com/docker-library/official-images.git
     - git reset --hard FETCH_HEAD
-    - head="${BUILD_VERSION}"
+    - head="release/${BUILD_VERSION}"
     - git checkout -b "$head"
     - envsubst < ../docker-library.template > library/archlinux
     - git diff
@@ -284,4 +284,4 @@ publish:official:
         --reviewer hashworks
         --fill
         --base master
-        --head "$head"
+        --head archlinux:"$head"
