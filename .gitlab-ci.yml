@@ -264,9 +264,11 @@ publish:official:
     - git config --global user.name "Arch Linux Technical User"
     - export BUILD_COMMIT=a4bcb0297b8bb1dd440c4af0622f16cf1ea659cb
   script:
-    - 'git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/archlinux/official-images.git"'
+    - mkdir official-images
     - cd official-images
-    - git fetch https://github.com/docker-library/official-images.git
+    - git init
+    - 'git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/archlinux/official-images.git"'
+    - git fetch --depth=1 https://github.com/docker-library/official-images.git
     - git reset --hard FETCH_HEAD
     - head="release/${BUILD_VERSION}"
     - git checkout -b "$head"
