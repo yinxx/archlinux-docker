@@ -280,7 +280,7 @@ publish:official:
     - git push -u origin "$head"
     - gh pr create
         --repo hashworks/official-images
-        --reviewer SantiagoTores
+        --reviewer SantiagoTorres
         --reviewer hashworks
         --fill
         --base master
