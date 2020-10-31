@@ -261,7 +261,7 @@ publish:official:
     - test -n "$BUILD_VERSION"
     - test -n "$BUILD_COMMIT"
     - pacman -Syu --noconfirm github-cli git gettext
-    - git config --global user.email "gitlabci@archlinux.org"
+    - git config --global user.email "github@archlinux.org"
     - git config --global user.name "Arch Linux Technical User"
   script:
     - mkdir official-images
