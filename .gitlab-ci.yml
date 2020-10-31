@@ -257,9 +257,11 @@ publish:official:
     variables:
       - $SCHEDULED_PUBLISH == "TRUE"
   before_script:
-    - test -n "$GITHUB_TOKEN"
+    - export | grep -q BUILD_VERSION=
+    - export | grep -q BUILD_COMMIT=
     - test -n "$BUILD_VERSION"
     - test -n "$BUILD_COMMIT"
+    - test -n "$GITHUB_TOKEN"
     - pacman -Syu --noconfirm github-cli git gettext
     - git config --global user.email "github@archlinux.org"
     - git config --global user.name "Arch Linux Technical User"
