@@ -15,3 +15,4 @@ Tags: base-devel, base-devel-${BUILD_VERSION}
 GitCommit: ${BUILD_COMMIT}
 GitFetch: refs/tags/v${BUILD_VERSION}
 File: Dockerfile.base-devel
+
